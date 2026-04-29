@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #MISE description="Interactive menu"
 #MISE raw=true
-#USAGE flag "-m --model <model>" help="Model pattern (e.g. sonnet, gpt-5.4)"
-#USAGE flag "--provider <provider>" help="Provider (e.g. anthropic, openai, google)"
+#USAGE flag "-m --model <model>" help="Provider-qualified model (e.g. openai-codex/gpt-5.5)"
+#USAGE flag "--provider <provider>" help="Provider prefix for unqualified model values"
 set -euo pipefail
 
 MODEL="${usage_model:-}"

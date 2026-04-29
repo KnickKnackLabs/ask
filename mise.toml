@@ -1,5 +1,14 @@
+[settings]
+experimental = true
+quiet = true
+task_output = "interleave"
+
+[plugins]
+shiv = "https://github.com/KnickKnackLabs/vfox-shiv"
+
 [tools]
 gum = "latest"
 jq = "latest"
 bats = "1.13.0"
 bun = "1"
+"shiv:sessions" = "latest"

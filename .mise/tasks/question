@@ -5,17 +5,19 @@
 #USAGE arg "[prompt]" help="The prompt"
 #USAGE flag "-f --file... <file>" help="Include file contents as context (repeatable)"
 #USAGE flag "-c --clipboard" help="Include clipboard contents as context"
-#USAGE flag "-m --model <model>" help="Model pattern (e.g. sonnet, gpt-5.4)"
-#USAGE flag "--provider <provider>" help="Provider (e.g. anthropic, openai, google)"
+#USAGE flag "-m --model <model>" help="Provider-qualified model (e.g. openai-codex/gpt-5.5)"
+#USAGE flag "--provider <provider>" help="Provider prefix for unqualified model values"
+#USAGE flag "--continue" help="Continue the latest ask session"
+#USAGE flag "--session <session>" help="Continue a specific session name or id"
 #USAGE flag "-v --verbose" help="Show debug info"
-#USAGE example "ask q 'What is a mutex?'" header="Direct question"
-#USAGE example "echo 'some text' | ask q 'Summarize this'" header="Pipe context"
-#USAGE example "ask q -f error.log 'Explain this error'" header="File context"
-#USAGE example "ask q -m gpt-5.4 'Quick answer'" header="Model selection"
-#USAGE example "shimmer web fetch URL | ask q 'What does this page say?'" header="Web page Q&A"
+#USAGE example "ask q -m openai-codex/gpt-5.5 'What is a mutex?'" header="Direct question"
+#USAGE example "echo 'some text' | ask q -m openai-codex/gpt-5.5 'Summarize this'" header="Pipe context"
+#USAGE example "ask q -m openai-codex/gpt-5.5 -f error.log 'Explain this error'" header="File context"
+#USAGE example "ask q -m openai-codex/gpt-5.5 'Quick answer'" header="Model selection"
+#USAGE example "shimmer web fetch URL | ask q -m openai-codex/gpt-5.5 'What does this page say?'" header="Web page Q&A"
 set -euo pipefail
 
-source "${MISE_CONFIG_ROOT}/lib/pi.sh"
+source "${MISE_CONFIG_ROOT}/lib/sessions.sh"
 source "${MISE_CONFIG_ROOT}/lib/clipboard.sh"
 source "${MISE_CONFIG_ROOT}/lib/ui.sh"
 
@@ -27,6 +29,8 @@ CLIPBOARD="${usage_clipboard:-false}"
 MODEL="${usage_model:-}"
 PROVIDER="${usage_provider:-}"
 VERBOSE="${usage_verbose:-false}"
+CONTINUE_LATEST="${usage_continue:-false}"
+CONTINUE_SESSION="${usage_session:-}"
 
 # Always read piped stdin if available
 PIPED=""
@@ -40,8 +44,7 @@ if [[ -z "${PROMPT}" && -n "${PIPED}" ]]; then
   PIPED=""  # consumed as prompt, not context
 fi
 
-[[ -n "${MODEL}" ]] && export ASK_MODEL="${MODEL}"
-[[ -n "${PROVIDER}" ]] && export ASK_PROVIDER="${PROVIDER}"
+MODEL=$(resolve_model "$MODEL" "$PROVIDER") || exit 1
 
 # --- Gather context from sources ---
 
@@ -91,12 +94,12 @@ if [[ -z "${PROMPT}" ]]; then
   [[ -z "${PROMPT}" ]] && { echo "error: no prompt provided" >&2; exit 1; }
 fi
 
-[[ "${VERBOSE}" == "true" ]] && echo "Provider: ${ASK_PROVIDER:-default} | Model: ${ASK_MODEL:-default} | Prompt: ${#PROMPT} chars | Context: ${#context} chars" >&2
+[[ "${VERBOSE}" == "true" ]] && echo "Model: ${MODEL} | Prompt: ${#PROMPT} chars | Context: ${#context} chars | Continue: ${CONTINUE_SESSION:-$CONTINUE_LATEST}" >&2
 
 # --- Run ---
 
 if [[ -n "${context}" ]]; then
-  run_pi "$(build_prompt "${PROMPT}" "${context}")"
+  run_sessions "$(build_prompt "${PROMPT}" "${context}")" "$MODEL" "$CONTINUE_SESSION" "$CONTINUE_LATEST"
 else
-  run_pi "${PROMPT}"
+  run_sessions "${PROMPT}" "$MODEL" "$CONTINUE_SESSION" "$CONTINUE_LATEST"
 fi

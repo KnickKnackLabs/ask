@@ -3,7 +3,7 @@
 # ui.sh — Gum UI helpers
 #
 
-# Use HISTORY_FILE from pi.sh if set, otherwise default
+# Use HISTORY_FILE from sessions.sh if set, otherwise default
 HISTORY_FILE="${HISTORY_FILE:-${HOME}/.ask/history.jsonl}"
 
 # Show a preview of content with a label

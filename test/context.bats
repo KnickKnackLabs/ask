@@ -6,6 +6,7 @@ setup() {
   export ASK_DIR="$BATS_TEST_TMPDIR/ask"
   export HISTORY_FILE="$ASK_DIR/history.jsonl"
   load test_helper
+  install_fake_sessions
 }
 
 # ── build_prompt ─────────────────────────────────────────────

@@ -35,13 +35,13 @@ const readme = (
 
       <Paragraph>
         Pipe in context, attach files, or just type. Uses{" "}
-        <Link href="https://github.com/anthropics/pi">pi</Link> as the runtime
-        — any model, any provider.
+        <Link href="https://github.com/KnickKnackLabs/sessions">sessions</Link>{" "}
+        for conversation continuity.
       </Paragraph>
 
       <Badges>
         <Badge label="shell" value="bash" color="4EAA25" logo="gnubash" logoColor="white" />
-        <Badge label="runtime" value="pi" color="7c3aed" href="https://github.com/anthropics/pi" />
+        <Badge label="runtime" value="sessions" color="7c3aed" href="https://github.com/KnickKnackLabs/sessions" />
         <Badge label="tests" value={`${testCount}`} color="green" />
         <Badge label="License" value="MIT" color="blue" href="LICENSE" />
       </Badges>
@@ -52,23 +52,27 @@ const readme = (
     </Section>
 
     <Section title="Usage">
-      <CodeBlock lang="bash">{`# Direct question
-ask q "What is a mutex?"
+      <CodeBlock lang="bash">{`# Direct question (new conversation by default)
+ask q -m openai-codex/gpt-5.5 "What is a mutex?"
 
 # Pipe context from anywhere
-shimmer web fetch "https://example.com" | ask q "Summarize this page"
-cat error.log | ask q "What went wrong?"
+shimmer web fetch "https://example.com" | ask q -m openai-codex/gpt-5.5 "Summarize this page"
+cat error.log | ask q -m openai-codex/gpt-5.5 "What went wrong?"
 
 # File context
-ask q -f schema.sql "Explain these tables"
-ask q -f a.rs -f b.rs "Compare these implementations"
+ask q -m openai-codex/gpt-5.5 -f schema.sql "Explain these tables"
+ask q -m openai-codex/gpt-5.5 -f a.rs -f b.rs "Compare these implementations"
 
 # Clipboard context
-ask q -c "What's this?"
+ask q -m openai-codex/gpt-5.5 -c "What's this?"
+
+# Continue previous conversations
+ask q -m openai-codex/gpt-5.5 --continue "Can you expand on that?"
+ask q -m openai-codex/gpt-5.5 --session ask-20260429-120000 "Follow up here"
 
 # Model and provider selection
-ask q -m gpt-5.4 "Quick answer"
-ask q --provider anthropic -m sonnet "Explain this"
+ask q -m openai-codex/gpt-5.5 "Quick answer"
+ask q --provider openai-codex -m gpt-5.5 "Explain this"
 
 # Interactive menu
 ask`}</CodeBlock>
@@ -77,14 +81,16 @@ ask`}</CodeBlock>
     <Section title="How it works">
       <Paragraph>
         <Code>ask</Code> assembles context from stdin, files, and the clipboard,
-        then sends it to <Code>pi -p</Code> in non-interactive mode. Context goes
-        in XML tags before the prompt — models focus on what's near the end, so
-        the question lands last.
+        then sends it through <Code>sessions</Code>. Each question starts a fresh
+        conversation by default; pass <Code>--continue</Code> for the latest ask
+        session or <Code>{"--session <id>"}</Code> for a specific one. Context goes in
+        XML tags before the prompt — models focus on what's near the end, so the
+        question lands last.
       </Paragraph>
 
       <Paragraph>
-        History is saved to <Code>~/.ask/history.jsonl</Code> — every prompt
-        with a timestamp, for later recall.
+        History is saved to <Code>~/.ask/history.jsonl</Code> with timestamps and
+        session IDs for later recall.
       </Paragraph>
     </Section>
 

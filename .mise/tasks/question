@@ -28,7 +28,16 @@ CLIPBOARD="${usage_clipboard:-false}"
 MODEL="${usage_model:-}"
 PROVIDER="${usage_provider:-}"
 VERBOSE="${usage_verbose:-false}"
-CONTINUE_LATEST="${usage_continue:-false}"
+# Optional #USAGE booleans inherit stale usage_* env vars from parent mise
+# tasks. Inspect the raw argv for --continue instead, so ambient
+# usage_continue=true cannot change the default fresh-session behavior.
+CONTINUE_LATEST="false"
+for arg in "$@"; do
+  if [[ "$arg" == "--continue" ]]; then
+    CONTINUE_LATEST="true"
+    break
+  fi
+done
 
 # Always read piped stdin if available
 PIPED=""

@@ -67,6 +67,15 @@ setup() {
   ! grep -q '^wake parent-session ' "$ASK_SESSIONS_LOG"
 }
 
+@test "question ignores inherited usage_continue" {
+  usage_continue="true" run ask question -m openai-codex/gpt-5.5 "hello"
+  [ "$status" -eq 0 ]
+  grep -q '^new ask-' "$ASK_SESSIONS_LOG"
+  grep -q '^wake new-session-id ' "$ASK_SESSIONS_LOG"
+  ! grep -q '^list --filter session.meta.tool=ask --limit 1 --json$' "$ASK_SESSIONS_LOG"
+  ! grep -q '^wake last-ask-session ' "$ASK_SESSIONS_LOG"
+}
+
 @test "question required model ignores inherited usage_model" {
   usage_model="openai-codex/gpt-5.5" run ask question "hello"
   [ "$status" -ne 0 ]

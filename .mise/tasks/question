@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+#MISE description="Ask a question"
+#MISE alias="q"
+#MISE raw=true
+#USAGE arg "[prompt]" help="The prompt"
+#USAGE flag "-f --file... <file>" help="Include file contents as context (repeatable)"
+#USAGE flag "-c --clipboard" help="Include clipboard contents as context"
+#USAGE flag "-m --model <model>" help="Model pattern (e.g. sonnet, gpt-5.4)"
+#USAGE flag "--provider <provider>" help="Provider (e.g. anthropic, openai, google)"
+#USAGE flag "-v --verbose" help="Show debug info"
+#USAGE example "ask q 'What is a mutex?'" header="Direct question"
+#USAGE example "echo 'some text' | ask q 'Summarize this'" header="Pipe context"
+#USAGE example "ask q -f error.log 'Explain this error'" header="File context"
+#USAGE example "ask q -m gpt-5.4 'Quick answer'" header="Model selection"
+#USAGE example "shimmer web fetch URL | ask q 'What does this page say?'" header="Web page Q&A"
+set -euo pipefail
+
+source "${MISE_CONFIG_ROOT}/lib/pi.sh"
+source "${MISE_CONFIG_ROOT}/lib/clipboard.sh"
+source "${MISE_CONFIG_ROOT}/lib/ui.sh"
+
+# --- Read inputs ---
+
+PROMPT="${usage_prompt:-}"
+FILES="${usage_file:-}"
+CLIPBOARD="${usage_clipboard:-false}"
+MODEL="${usage_model:-}"
+PROVIDER="${usage_provider:-}"
+VERBOSE="${usage_verbose:-false}"
+
+# Always read piped stdin if available
+PIPED=""
+if [[ ! -t 0 ]]; then
+  PIPED=$(cat)
+fi
+
+# Piped input: becomes prompt if no arg, or context if prompt arg given
+if [[ -z "${PROMPT}" && -n "${PIPED}" ]]; then
+  PROMPT="${PIPED}"
+  PIPED=""  # consumed as prompt, not context
+fi
+
+[[ -n "${MODEL}" ]] && export ASK_MODEL="${MODEL}"
+[[ -n "${PROVIDER}" ]] && export ASK_PROVIDER="${PROVIDER}"
+
+# --- Gather context from sources ---
+
+context=""
+
+# Piped input as context (when prompt arg was also given)
+if [[ -n "${PIPED}" ]]; then
+  context+="${PIPED}"
+fi
+
+if [[ -n "${FILES}" ]]; then
+  for file in ${FILES}; do
+    [[ ! -f "${file}" ]] && { echo "error: file not found: ${file}" >&2; exit 1; }
+    file_content=$(cat "${file}")
+    if [[ -n "${context}" ]]; then
+      context+=$'\n\n---\n\n'
+    fi
+    context+="File: ${file}"$'\n\n'"${file_content}"
+  done
+fi
+
+clip_content=""
+if [[ "${CLIPBOARD}" == "true" ]]; then
+  clip_content=$(get_clipboard) || exit 1
+  [[ -z "${clip_content}" ]] && { echo "error: clipboard is empty" >&2; exit 1; }
+  if [[ -n "${context}" ]]; then
+    context+=$'\n\n---\n\n'
+  fi
+  context+="Clipboard:"$'\n\n'"${clip_content}"
+fi
+
+# --- Resolve prompt if still empty ---
+
+if [[ -z "${PROMPT}" ]]; then
+  # Interactive: prompt the user
+  if [[ -t 0 ]]; then
+    placeholder="What would you like to ask?"
+    if [[ -n "${FILES}" && "${CLIPBOARD}" == "true" ]]; then
+      placeholder="What would you like to ask about these?"
+    elif [[ -n "${FILES}" ]]; then
+      placeholder="What would you like to ask about this file?"
+    elif [[ "${CLIPBOARD}" == "true" ]]; then
+      placeholder="What would you like to ask about this?"
+    fi
+    PROMPT=$(prompt_user "${placeholder}")
+  fi
+  [[ -z "${PROMPT}" ]] && { echo "error: no prompt provided" >&2; exit 1; }
+fi
+
+[[ "${VERBOSE}" == "true" ]] && echo "Provider: ${ASK_PROVIDER:-default} | Model: ${ASK_MODEL:-default} | Prompt: ${#PROMPT} chars | Context: ${#context} chars" >&2
+
+# --- Run ---
+
+if [[ -n "${context}" ]]; then
+  run_pi "$(build_prompt "${PROMPT}" "${context}")"
+else
+  run_pi "${PROMPT}"
+fi

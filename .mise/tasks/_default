@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+#MISE description="Interactive menu"
+#MISE raw=true
+#USAGE flag "-m --model <model>" help="Model pattern (e.g. sonnet, gpt-5.4)"
+#USAGE flag "--provider <provider>" help="Provider (e.g. anthropic, openai, google)"
+set -euo pipefail
+
+MODEL="${usage_model:-}"
+PROVIDER="${usage_provider:-}"
+[[ -n "${MODEL}" ]] && export ASK_MODEL="${MODEL}"
+[[ -n "${PROVIDER}" ]] && export ASK_PROVIDER="${PROVIDER}"
+
+choice=$(gum choose \
+  "New question" \
+  "From clipboard" \
+  "From file" \
+  "Exit")
+
+case "${choice}" in
+  "New question")
+    mise run question ${MODEL:+-m "$MODEL"} ${PROVIDER:+--provider "$PROVIDER"}
+    ;;
+  "From clipboard")
+    mise run question --clipboard ${MODEL:+-m "$MODEL"} ${PROVIDER:+--provider "$PROVIDER"}
+    ;;
+  "From file")
+    file=$(gum file --all)
+    [[ -z "${file}" ]] && { echo "error: no file selected" >&2; exit 1; }
+    mise run question --file "${file}" ${MODEL:+-m "$MODEL"} ${PROVIDER:+--provider "$PROVIDER"}
+    ;;
+  "Exit"|"")
+    exit 0
+    ;;
+esac

@@ -41,7 +41,7 @@ setup() {
 @test "question without model fails clearly" {
   run ask question "hello"
   [ "$status" -ne 0 ]
-  [[ "$output" == *"--model is required"* ]]
+  [[ "$output" == *"Missing required flag"* ]]
 }
 
 @test "question creates a fresh session by default" {
@@ -59,9 +59,16 @@ setup() {
   ! grep -q '^new ' "$ASK_SESSIONS_LOG"
 }
 
-@test "question --session resumes explicit session" {
-  run ask question -m openai-codex/gpt-5.5 --session named-session "hello again"
+@test "question ignores inherited usage_session by not exposing --session" {
+  usage_session="parent-session" run ask question -m openai-codex/gpt-5.5 "hello"
   [ "$status" -eq 0 ]
-  grep -q '^wake named-session ' "$ASK_SESSIONS_LOG"
-  ! grep -q '^new ' "$ASK_SESSIONS_LOG"
+  grep -q '^new ask-' "$ASK_SESSIONS_LOG"
+  grep -q '^wake new-session-id ' "$ASK_SESSIONS_LOG"
+  ! grep -q '^wake parent-session ' "$ASK_SESSIONS_LOG"
+}
+
+@test "question required model ignores inherited usage_model" {
+  usage_model="openai-codex/gpt-5.5" run ask question "hello"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"Missing required flag"* ]]
 }

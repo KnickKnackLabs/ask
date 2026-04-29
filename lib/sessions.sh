@@ -114,15 +114,12 @@ latest_ask_session() {
 run_sessions() {
   local full_prompt="$1"
   local model="$2"
-  local continue_session="${3:-}"
-  local continue_latest="${4:-false}"
+  local continue_latest="${3:-false}"
   local session_id
 
   require_sessions || return 1
 
-  if [[ -n "$continue_session" ]]; then
-    session_id="$continue_session"
-  elif [[ "$continue_latest" == "true" ]]; then
+  if [[ "$continue_latest" == "true" ]]; then
     session_id=$(latest_ask_session) || return 1
   else
     session_id=$(new_ask_session) || return 1

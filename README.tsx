@@ -68,7 +68,6 @@ ask q -m openai-codex/gpt-5.5 -c "What's this?"
 
 # Continue previous conversations
 ask q -m openai-codex/gpt-5.5 --continue "Can you expand on that?"
-ask q -m openai-codex/gpt-5.5 --session ask-20260429-120000 "Follow up here"
 
 # Model and provider selection
 ask q -m openai-codex/gpt-5.5 "Quick answer"
@@ -83,9 +82,8 @@ ask`}</CodeBlock>
         <Code>ask</Code> assembles context from stdin, files, and the clipboard,
         then sends it through <Code>sessions</Code>. Each question starts a fresh
         conversation by default; pass <Code>--continue</Code> for the latest ask
-        session or <Code>{"--session <id>"}</Code> for a specific one. Context goes in
-        XML tags before the prompt — models focus on what's near the end, so the
-        question lands last.
+        session. Context goes in XML tags before the prompt — models focus on
+        what's near the end, so the question lands last.
       </Paragraph>
 
       <Paragraph>

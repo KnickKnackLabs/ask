@@ -5,10 +5,9 @@
 #USAGE arg "[prompt]" help="The prompt"
 #USAGE flag "-f --file... <file>" help="Include file contents as context (repeatable)"
 #USAGE flag "-c --clipboard" help="Include clipboard contents as context"
-#USAGE flag "-m --model <model>" help="Provider-qualified model (e.g. openai-codex/gpt-5.5)"
+#USAGE flag "-m --model <model>" help="Provider-qualified model (e.g. openai-codex/gpt-5.5)" required=#true
 #USAGE flag "--provider <provider>" help="Provider prefix for unqualified model values"
 #USAGE flag "--continue" help="Continue the latest ask session"
-#USAGE flag "--session <session>" help="Continue a specific session name or id"
 #USAGE flag "-v --verbose" help="Show debug info"
 #USAGE example "ask q -m openai-codex/gpt-5.5 'What is a mutex?'" header="Direct question"
 #USAGE example "echo 'some text' | ask q -m openai-codex/gpt-5.5 'Summarize this'" header="Pipe context"
@@ -30,7 +29,6 @@ MODEL="${usage_model:-}"
 PROVIDER="${usage_provider:-}"
 VERBOSE="${usage_verbose:-false}"
 CONTINUE_LATEST="${usage_continue:-false}"
-CONTINUE_SESSION="${usage_session:-}"
 
 # Always read piped stdin if available
 PIPED=""
@@ -94,12 +92,12 @@ if [[ -z "${PROMPT}" ]]; then
   [[ -z "${PROMPT}" ]] && { echo "error: no prompt provided" >&2; exit 1; }
 fi
 
-[[ "${VERBOSE}" == "true" ]] && echo "Model: ${MODEL} | Prompt: ${#PROMPT} chars | Context: ${#context} chars | Continue: ${CONTINUE_SESSION:-$CONTINUE_LATEST}" >&2
+[[ "${VERBOSE}" == "true" ]] && echo "Model: ${MODEL} | Prompt: ${#PROMPT} chars | Context: ${#context} chars | Continue: ${CONTINUE_LATEST}" >&2
 
 # --- Run ---
 
 if [[ -n "${context}" ]]; then
-  run_sessions "$(build_prompt "${PROMPT}" "${context}")" "$MODEL" "$CONTINUE_SESSION" "$CONTINUE_LATEST"
+  run_sessions "$(build_prompt "${PROMPT}" "${context}")" "$MODEL" "$CONTINUE_LATEST"
 else
-  run_sessions "${PROMPT}" "$MODEL" "$CONTINUE_SESSION" "$CONTINUE_LATEST"
+  run_sessions "${PROMPT}" "$MODEL" "$CONTINUE_LATEST"
 fi

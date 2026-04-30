@@ -65,6 +65,31 @@ SH
   chmod +x "$bin_dir/sessions"
 }
 
+install_fake_gum() {
+  local bin_dir="$BATS_TEST_TMPDIR/bin"
+  mkdir -p "$bin_dir"
+  export PATH="$bin_dir:$PATH"
+  export ASK_FAKE_GUM_CHOICE="${1:-New question}"
+
+  cat > "$bin_dir/gum" <<'SH'
+#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  choose)
+    printf '%s\n' "${ASK_FAKE_GUM_CHOICE:?}"
+    ;;
+  file)
+    printf '%s\n' "${ASK_FAKE_GUM_FILE:-}"
+    ;;
+  *)
+    echo "unexpected gum command: $*" >&2
+    exit 1
+    ;;
+esac
+SH
+  chmod +x "$bin_dir/gum"
+}
+
 # Wrapper to run ask tasks through mise
 ask() {
   cd "$REPO_DIR" && mise run -q "$@"

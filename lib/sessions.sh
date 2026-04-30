@@ -120,7 +120,7 @@ If the question cannot be answered from the prompt/context, say so briefly.
 IDENTITY
 }
 
-run_sessions() {
+run_ask_session() {
   local full_prompt="$1"
   local model="$2"
   local continue_latest="${3:-false}"

@@ -1,29 +1,36 @@
 #!/usr/bin/env bash
 #MISE description="Run BATS tests"
-#USAGE arg "[args]..." var=#true help="Test suites or bats arguments"
+#USAGE arg "[args]" var=#true help="Test suites or bats arguments"
 #USAGE example "mise run test" header="Run all tests"
-#USAGE example "mise run test validation" header="Run a specific suite by name"
-#USAGE example "mise run test test/status.bats" header="Run a specific file"
+#USAGE example "mise run test question" header="Run a specific suite by name"
+#USAGE example "mise run test test/question.bats" header="Run a specific file"
 #USAGE example "mise run test -- --filter rejects" header="Filter tests by name"
 set -euo pipefail
 
 TEST_DIR="$MISE_CONFIG_ROOT/test"
 
 args=()
+if [ -n "${usage_args:-}" ]; then
+  while IFS= read -r arg; do
+    args+=("$arg")
+  done < <(printf '%s' "$usage_args" | xargs printf '%s\n')
+fi
+
+resolved=()
 has_target=false
 
-for arg in "$@"; do
+for arg in ${args[@]+"${args[@]}"}; do
   if [[ "$arg" != -* && "$arg" != *.bats && -f "$TEST_DIR/$arg.bats" ]]; then
-    args+=("$TEST_DIR/$arg.bats")
+    resolved+=("$TEST_DIR/$arg.bats")
     has_target=true
   else
     [[ "$arg" == *.bats || -d "$arg" ]] && has_target=true
-    args+=("$arg")
+    resolved+=("$arg")
   fi
 done
 
 if ! $has_target; then
-  args+=("$TEST_DIR/")
+  resolved+=("$TEST_DIR/")
 fi
 
-bats "${args[@]}"
+bats "${resolved[@]}"

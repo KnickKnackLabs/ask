@@ -109,7 +109,7 @@ fi
 # --- Run ---
 
 if [[ -n "${context}" ]]; then
-  run_sessions "$(build_prompt "${PROMPT}" "${context}")" "$MODEL" "$CONTINUE_LATEST"
+  run_ask_session "$(build_prompt "${PROMPT}" "${context}")" "$MODEL" "$CONTINUE_LATEST"
 else
-  run_sessions "${PROMPT}" "$MODEL" "$CONTINUE_LATEST"
+  run_ask_session "${PROMPT}" "$MODEL" "$CONTINUE_LATEST"
 fi

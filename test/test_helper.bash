@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 
-if [ -z "${MISE_CONFIG_ROOT:-}" ]; then
-  echo "MISE_CONFIG_ROOT not set — run tests via: mise run test" >&2
-  exit 1
+if [ -z "${REPO_DIR:-}" ]; then
+  REPO_DIR="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
 fi
 
 # Source libs for unit testing
-source "$MISE_CONFIG_ROOT/lib/sessions.sh"
-source "$MISE_CONFIG_ROOT/lib/clipboard.sh"
+source "$REPO_DIR/lib/sessions.sh"
+source "$REPO_DIR/lib/clipboard.sh"
 
 install_fake_sessions() {
   local bin_dir="$BATS_TEST_TMPDIR/bin"
@@ -63,6 +62,6 @@ SH
 
 # Wrapper to run ask tasks through mise
 ask() {
-  cd "$MISE_CONFIG_ROOT" && mise run -q "$@"
+  cd "$REPO_DIR" && mise run -q "$@"
 }
 export -f ask

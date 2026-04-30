@@ -99,3 +99,11 @@ setup() {
   ! grep -q 'x1f9' "$ASK_SESSIONS_LOG"
   ! grep -q 'review PR 123' "$ASK_SESSIONS_LOG"
 }
+
+@test "question scrubs inherited usage vars before sessions wake" {
+  usage_background="true" usage_headless="true" usage_context="parent context" run ask question -m openai-codex/gpt-5.5 "hello"
+  [ "$status" -eq 0 ]
+  grep -q '^wake-usage-background=$' "$ASK_SESSIONS_LOG"
+  grep -q '^wake-usage-headless=$' "$ASK_SESSIONS_LOG"
+  grep -q '^wake-usage-context=$' "$ASK_SESSIONS_LOG"
+}

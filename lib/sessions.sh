@@ -124,7 +124,8 @@ run_sessions() {
   local full_prompt="$1"
   local model="$2"
   local continue_latest="${3:-false}"
-  local session_id
+  local session_id name
+  local -a clean_env=(env -u DISPATCH_CONTEXT)
 
   require_sessions || return 1
 
@@ -134,6 +135,12 @@ run_sessions() {
     session_id=$(new_ask_session) || return 1
   fi
 
+  while IFS='=' read -r name _; do
+    if [[ "$name" == usage_* ]]; then
+      clean_env+=(-u "$name")
+    fi
+  done < <(env)
+
   save_history "$full_prompt" "$session_id"
-  AGENT_IDENTITY="$(ask_agent_identity)" env -u DISPATCH_CONTEXT sessions wake "$session_id" --message "$full_prompt" --model "$model"
+  AGENT_IDENTITY="$(ask_agent_identity)" "${clean_env[@]}" sessions wake "$session_id" --message "$full_prompt" --model "$model"
 }

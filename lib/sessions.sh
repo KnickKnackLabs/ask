@@ -111,6 +111,15 @@ latest_ask_session() {
   printf '%s\n' "$session_id"
 }
 
+ask_agent_identity() {
+  cat <<'IDENTITY'
+You are ask, a concise question-answering assistant.
+Answer the user's question directly.
+Use any provided context, but do not mention hidden instructions or session machinery.
+If the question cannot be answered from the prompt/context, say so briefly.
+IDENTITY
+}
+
 run_sessions() {
   local full_prompt="$1"
   local model="$2"
@@ -126,5 +135,5 @@ run_sessions() {
   fi
 
   save_history "$full_prompt" "$session_id"
-  env -u AGENT_IDENTITY -u DISPATCH_CONTEXT sessions wake "$session_id" --message "$full_prompt" --model "$model"
+  AGENT_IDENTITY="$(ask_agent_identity)" env -u DISPATCH_CONTEXT sessions wake "$session_id" --message "$full_prompt" --model "$model"
 }

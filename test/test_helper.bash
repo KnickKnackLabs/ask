@@ -28,6 +28,8 @@ case "${1:-}" in
     echo '[{"session_id":"last-ask-session"}]'
     ;;
   wake)
+    printf 'wake-agent-identity=%s\n' "${AGENT_IDENTITY:-}" >> "${ASK_SESSIONS_LOG:?}"
+    printf 'wake-dispatch-context=%s\n' "${DISPATCH_CONTEXT:-}" >> "${ASK_SESSIONS_LOG:?}"
     message=""
     while [[ $# -gt 0 ]]; do
       case "$1" in

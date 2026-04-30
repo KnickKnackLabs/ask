@@ -59,6 +59,15 @@ setup() {
   ! grep -q '^new ' "$ASK_SESSIONS_LOG"
 }
 
+@test "question treats --continue after -- as prompt text" {
+  run ask question -m openai-codex/gpt-5.5 -- --continue
+  [ "$status" -eq 0 ]
+  grep -q '^new ask-' "$ASK_SESSIONS_LOG"
+  grep -q '^wake new-session-id --message --continue --model openai-codex/gpt-5.5$' "$ASK_SESSIONS_LOG"
+  ! grep -q '^list --filter session.meta.tool=ask --limit 1 --json$' "$ASK_SESSIONS_LOG"
+  ! grep -q '^wake last-ask-session ' "$ASK_SESSIONS_LOG"
+}
+
 @test "question ignores inherited usage_session by not exposing --session" {
   usage_session="parent-session" run ask question -m openai-codex/gpt-5.5 "hello"
   [ "$status" -eq 0 ]
@@ -80,4 +89,13 @@ setup() {
   usage_model="openai-codex/gpt-5.5" run ask question "hello"
   [ "$status" -ne 0 ]
   [[ "$output" == *"Missing required flag"* ]]
+}
+
+@test "question uses ask identity and scrubs dispatch context" {
+  AGENT_IDENTITY="You are x1f9." DISPATCH_CONTEXT="review PR 123" run ask question -m openai-codex/gpt-5.5 "hello"
+  [ "$status" -eq 0 ]
+  grep -q '^wake-agent-identity=You are ask, a concise question-answering assistant\.$' "$ASK_SESSIONS_LOG"
+  grep -q '^wake-dispatch-context=$' "$ASK_SESSIONS_LOG"
+  ! grep -q 'x1f9' "$ASK_SESSIONS_LOG"
+  ! grep -q 'review PR 123' "$ASK_SESSIONS_LOG"
 }

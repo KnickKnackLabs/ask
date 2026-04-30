@@ -33,6 +33,9 @@ VERBOSE="${usage_verbose:-false}"
 # usage_continue=true cannot change the default fresh-session behavior.
 CONTINUE_LATEST="false"
 for arg in "$@"; do
+  if [[ "$arg" == "--" ]]; then
+    break
+  fi
   if [[ "$arg" == "--continue" ]]; then
     CONTINUE_LATEST="true"
     break

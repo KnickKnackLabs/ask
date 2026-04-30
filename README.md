@@ -8,7 +8,7 @@ Pipe in context, attach files, or just type. Uses [sessions](https://github.com/
 
 ![shell: bash](https://img.shields.io/badge/shell-bash-4EAA25?style=flat&logo=gnubash&logoColor=white)
 [![runtime: sessions](https://img.shields.io/badge/runtime-sessions-7c3aed?style=flat)](https://github.com/KnickKnackLabs/sessions)
-![tests: 21](https://img.shields.io/badge/tests-21-green?style=flat)
+![tests: 25](https://img.shields.io/badge/tests-25-green?style=flat)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat)](LICENSE)
 
 </div>
@@ -58,7 +58,7 @@ History is saved to `~/.ask/history.jsonl` with timestamps and session IDs for l
 ```bash
 gh repo clone KnickKnackLabs/ask
 cd ask && mise trust && mise install
-mise run test   # 21 tests
+mise run test   # 25 tests
 ```
 
 <div align="center">

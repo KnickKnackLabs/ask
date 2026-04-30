@@ -59,6 +59,14 @@ setup() {
   ! grep -q '^new ' "$ASK_SESSIONS_LOG"
 }
 
+@test "question --continue scrubs inherited usage vars before sessions list" {
+  DISPATCH_CONTEXT="review PR 123" usage_filter="session.meta.tool=parent" run ask question -m openai-codex/gpt-5.5 --continue "hello again"
+  [ "$status" -eq 0 ]
+  grep -q '^list-dispatch-context=$' "$ASK_SESSIONS_LOG"
+  grep -q '^list-usage-filter=$' "$ASK_SESSIONS_LOG"
+  grep -q '^wake last-ask-session ' "$ASK_SESSIONS_LOG"
+}
+
 @test "question treats --continue after -- as prompt text" {
   run ask question -m openai-codex/gpt-5.5 -- --continue
   [ "$status" -eq 0 ]
@@ -100,9 +108,13 @@ setup() {
   ! grep -q 'review PR 123' "$ASK_SESSIONS_LOG"
 }
 
-@test "question scrubs inherited usage vars before sessions wake" {
-  usage_background="true" usage_headless="true" usage_context="parent context" run ask question -m openai-codex/gpt-5.5 "hello"
+@test "question scrubs inherited usage vars before sessions commands" {
+  DISPATCH_CONTEXT="review PR 123" usage_background="true" usage_headless="true" usage_context="parent context" usage_harness="claude" run ask question -m openai-codex/gpt-5.5 "hello"
   [ "$status" -eq 0 ]
+  grep -q '^new-dispatch-context=$' "$ASK_SESSIONS_LOG"
+  grep -q '^new-usage-context=$' "$ASK_SESSIONS_LOG"
+  grep -q '^new-usage-harness=$' "$ASK_SESSIONS_LOG"
+  grep -q '^wake-dispatch-context=$' "$ASK_SESSIONS_LOG"
   grep -q '^wake-usage-background=$' "$ASK_SESSIONS_LOG"
   grep -q '^wake-usage-headless=$' "$ASK_SESSIONS_LOG"
   grep -q '^wake-usage-context=$' "$ASK_SESSIONS_LOG"

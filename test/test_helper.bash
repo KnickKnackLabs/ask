@@ -21,9 +21,14 @@ printf '%s\n' "$*" >> "${ASK_SESSIONS_LOG:?}"
 
 case "${1:-}" in
   new)
+    printf 'new-dispatch-context=%s\n' "${DISPATCH_CONTEXT:-}" >> "${ASK_SESSIONS_LOG:?}"
+    printf 'new-usage-context=%s\n' "${usage_context:-}" >> "${ASK_SESSIONS_LOG:?}"
+    printf 'new-usage-harness=%s\n' "${usage_harness:-}" >> "${ASK_SESSIONS_LOG:?}"
     echo "new-session-id"
     ;;
   list)
+    printf 'list-dispatch-context=%s\n' "${DISPATCH_CONTEXT:-}" >> "${ASK_SESSIONS_LOG:?}"
+    printf 'list-usage-filter=%s\n' "${usage_filter:-}" >> "${ASK_SESSIONS_LOG:?}"
     echo '[{"session_id":"last-ask-session"}]'
     ;;
   wake)

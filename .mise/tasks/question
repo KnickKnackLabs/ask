@@ -24,6 +24,7 @@ source "${MISE_CONFIG_ROOT}/lib/ui.sh"
 
 PROMPT=""
 FILES=()
+HAS_FILES="false"
 CLIPBOARD="false"
 MODEL=""
 PROVIDER=""
@@ -45,10 +46,12 @@ while [[ $# -gt 0 ]]; do
     -f|--file)
       [[ $# -lt 2 ]] && { echo "error: $1 requires a value" >&2; exit 1; }
       FILES+=("$2")
+      HAS_FILES="true"
       shift 2
       ;;
     --file=*)
       FILES+=("${1#--file=}")
+      HAS_FILES="true"
       shift
       ;;
     -c|--clipboard)
@@ -115,7 +118,7 @@ if [[ -n "${PIPED}" ]]; then
   context+="${PIPED}"
 fi
 
-for file in "${FILES[@]}"; do
+for file in ${FILES[@]+"${FILES[@]}"}; do
   [[ ! -f "${file}" ]] && { echo "error: file not found: ${file}" >&2; exit 1; }
   file_content=$(cat "${file}")
   if [[ -n "${context}" ]]; then
@@ -140,9 +143,9 @@ if [[ -z "${PROMPT}" ]]; then
   # Interactive: prompt the user
   if [[ -t 0 ]]; then
     placeholder="What would you like to ask?"
-    if [[ ${#FILES[@]} -gt 0 && "${CLIPBOARD}" == "true" ]]; then
+    if [[ "${HAS_FILES}" == "true" && "${CLIPBOARD}" == "true" ]]; then
       placeholder="What would you like to ask about these?"
-    elif [[ ${#FILES[@]} -gt 0 ]]; then
+    elif [[ "${HAS_FILES}" == "true" ]]; then
       placeholder="What would you like to ask about this file?"
     elif [[ "${CLIPBOARD}" == "true" ]]; then
       placeholder="What would you like to ask about this?"

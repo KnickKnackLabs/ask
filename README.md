@@ -8,7 +8,7 @@ Pipe in context, attach files, or just type. Uses [sessions](https://github.com/
 
 ![shell: bash](https://img.shields.io/badge/shell-bash-4EAA25?style=flat&logo=gnubash&logoColor=white)
 [![runtime: sessions](https://img.shields.io/badge/runtime-sessions-7c3aed?style=flat)](https://github.com/KnickKnackLabs/sessions)
-![tests: 20](https://img.shields.io/badge/tests-20-green?style=flat)
+![tests: 21](https://img.shields.io/badge/tests-21-green?style=flat)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat)](LICENSE)
 
 </div>
@@ -44,7 +44,7 @@ ask q -m openai-codex/gpt-5.5 "Quick answer"
 ask q --provider openai-codex -m gpt-5.5 "Explain this"
 
 # Interactive menu
-ask
+ask -m openai-codex/gpt-5.5
 ```
 
 ## How it works
@@ -58,7 +58,7 @@ History is saved to `~/.ask/history.jsonl` with timestamps and session IDs for l
 ```bash
 gh repo clone KnickKnackLabs/ask
 cd ask && mise trust && mise install
-mise run test   # 20 tests
+mise run test   # 21 tests
 ```
 
 <div align="center">

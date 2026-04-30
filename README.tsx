@@ -74,7 +74,7 @@ ask q -m openai-codex/gpt-5.5 "Quick answer"
 ask q --provider openai-codex -m gpt-5.5 "Explain this"
 
 # Interactive menu
-ask`}</CodeBlock>
+ask -m openai-codex/gpt-5.5`}</CodeBlock>
     </Section>
 
     <Section title="How it works">

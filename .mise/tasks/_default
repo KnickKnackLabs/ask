@@ -1,14 +1,60 @@
 #!/usr/bin/env bash
 #MISE description="Interactive menu"
 #MISE raw=true
-#USAGE flag "-m --model <model>" help="Model pattern (e.g. sonnet, gpt-5.4)"
-#USAGE flag "--provider <provider>" help="Provider (e.g. anthropic, openai, google)"
+#USAGE flag "-m --model <model>" help="Provider-qualified model (e.g. openai-codex/gpt-5.5)"
+#USAGE flag "--provider <provider>" help="Provider prefix for unqualified model values"
 set -euo pipefail
 
-MODEL="${usage_model:-}"
-PROVIDER="${usage_provider:-}"
-[[ -n "${MODEL}" ]] && export ASK_MODEL="${MODEL}"
-[[ -n "${PROVIDER}" ]] && export ASK_PROVIDER="${PROVIDER}"
+# Optional #USAGE values can inherit stale usage_* env vars from parent
+# mise tasks. Parse the raw argv instead so only flags passed to this
+# invocation affect the interactive menu.
+MODEL=""
+PROVIDER=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --)
+      break
+      ;;
+    -m|--model)
+      [[ $# -lt 2 ]] && { echo "error: $1 requires a value" >&2; exit 1; }
+      MODEL="$2"
+      shift 2
+      ;;
+    --model=*)
+      MODEL="${1#--model=}"
+      shift
+      ;;
+    --provider)
+      [[ $# -lt 2 ]] && { echo "error: $1 requires a value" >&2; exit 1; }
+      PROVIDER="$2"
+      shift 2
+      ;;
+    --provider=*)
+      PROVIDER="${1#--provider=}"
+      shift
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
+question_args=()
+[[ -n "${MODEL}" ]] && question_args+=(-m "${MODEL}")
+[[ -n "${PROVIDER}" ]] && question_args+=(--provider "${PROVIDER}")
+
+run_question() {
+  local name
+  local -a clean_env=(env)
+
+  while IFS='=' read -r name _; do
+    if [[ "$name" == usage_* ]]; then
+      clean_env+=(-u "$name")
+    fi
+  done < <(env)
+
+  "${clean_env[@]}" mise run question ${question_args[@]+"${question_args[@]}"} "$@"
+}
 
 choice=$(gum choose \
   "New question" \
@@ -18,15 +64,15 @@ choice=$(gum choose \
 
 case "${choice}" in
   "New question")
-    mise run question ${MODEL:+-m "$MODEL"} ${PROVIDER:+--provider "$PROVIDER"}
+    run_question
     ;;
   "From clipboard")
-    mise run question --clipboard ${MODEL:+-m "$MODEL"} ${PROVIDER:+--provider "$PROVIDER"}
+    run_question --clipboard
     ;;
   "From file")
     file=$(gum file --all)
     [[ -z "${file}" ]] && { echo "error: no file selected" >&2; exit 1; }
-    mise run question --file "${file}" ${MODEL:+-m "$MODEL"} ${PROVIDER:+--provider "$PROVIDER"}
+    run_question --file "${file}"
     ;;
   "Exit"|"")
     exit 0

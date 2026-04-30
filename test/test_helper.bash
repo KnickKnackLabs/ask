@@ -30,6 +30,9 @@ case "${1:-}" in
   wake)
     printf 'wake-agent-identity=%s\n' "${AGENT_IDENTITY:-}" >> "${ASK_SESSIONS_LOG:?}"
     printf 'wake-dispatch-context=%s\n' "${DISPATCH_CONTEXT:-}" >> "${ASK_SESSIONS_LOG:?}"
+    printf 'wake-usage-background=%s\n' "${usage_background:-}" >> "${ASK_SESSIONS_LOG:?}"
+    printf 'wake-usage-headless=%s\n' "${usage_headless:-}" >> "${ASK_SESSIONS_LOG:?}"
+    printf 'wake-usage-context=%s\n' "${usage_context:-}" >> "${ASK_SESSIONS_LOG:?}"
     message=""
     while [[ $# -gt 0 ]]; do
       case "$1" in

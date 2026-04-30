@@ -93,6 +93,33 @@ setup() {
   ! grep -q '^wake last-ask-session ' "$ASK_SESSIONS_LOG"
 }
 
+@test "question applies explicitly passed provider to unqualified model" {
+  run ask question --provider openai-codex -m gpt-5.5 "hello"
+  [ "$status" -eq 0 ]
+  grep -q '^wake new-session-id --message hello --model openai-codex/gpt-5.5$' "$ASK_SESSIONS_LOG"
+}
+
+@test "question ignores inherited usage_provider" {
+  usage_provider="openai-codex" run ask question -m gpt-5.5 "hello"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"provider-qualified"* ]]
+}
+
+@test "question ignores inherited usage_prompt" {
+  usage_prompt="parent prompt" run ask question -m openai-codex/gpt-5.5
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"no prompt"* ]]
+}
+
+@test "question ignores inherited optional context and verbose flags" {
+  echo "parent secret" > "$BATS_TEST_TMPDIR/parent.txt"
+  usage_file="$BATS_TEST_TMPDIR/parent.txt" usage_clipboard="true" usage_verbose="true" run ask question -m openai-codex/gpt-5.5 "hello"
+  [ "$status" -eq 0 ]
+  [[ "$output" == "hello" ]]
+  grep -q '^wake new-session-id --message hello --model openai-codex/gpt-5.5$' "$ASK_SESSIONS_LOG"
+  ! grep -q 'parent secret' "$ASK_SESSIONS_LOG"
+}
+
 @test "question required model ignores inherited usage_model" {
   usage_model="openai-codex/gpt-5.5" run ask question "hello"
   [ "$status" -ne 0 ]

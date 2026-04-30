@@ -22,24 +22,77 @@ source "${MISE_CONFIG_ROOT}/lib/ui.sh"
 
 # --- Read inputs ---
 
-PROMPT="${usage_prompt:-}"
-FILES="${usage_file:-}"
-CLIPBOARD="${usage_clipboard:-false}"
-MODEL="${usage_model:-}"
-PROVIDER="${usage_provider:-}"
-VERBOSE="${usage_verbose:-false}"
-# Optional #USAGE booleans inherit stale usage_* env vars from parent mise
-# tasks. Inspect the raw argv for --continue instead, so ambient
-# usage_continue=true cannot change the default fresh-session behavior.
+PROMPT=""
+FILES=()
+HAS_FILES="false"
+CLIPBOARD="false"
+MODEL=""
+PROVIDER=""
+VERBOSE="false"
 CONTINUE_LATEST="false"
-for arg in "$@"; do
-  if [[ "$arg" == "--" ]]; then
-    break
-  fi
-  if [[ "$arg" == "--continue" ]]; then
-    CONTINUE_LATEST="true"
-    break
-  fi
+
+# Optional #USAGE values inherit stale usage_* env vars from parent mise
+# tasks. Parse raw argv instead so only flags/args passed to this invocation
+# affect ask behavior.
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --)
+      shift
+      if [[ $# -gt 0 ]]; then
+        PROMPT="$*"
+      fi
+      break
+      ;;
+    -f|--file)
+      [[ $# -lt 2 ]] && { echo "error: $1 requires a value" >&2; exit 1; }
+      FILES+=("$2")
+      HAS_FILES="true"
+      shift 2
+      ;;
+    --file=*)
+      FILES+=("${1#--file=}")
+      HAS_FILES="true"
+      shift
+      ;;
+    -c|--clipboard)
+      CLIPBOARD="true"
+      shift
+      ;;
+    -m|--model)
+      [[ $# -lt 2 ]] && { echo "error: $1 requires a value" >&2; exit 1; }
+      MODEL="$2"
+      shift 2
+      ;;
+    --model=*)
+      MODEL="${1#--model=}"
+      shift
+      ;;
+    --provider)
+      [[ $# -lt 2 ]] && { echo "error: $1 requires a value" >&2; exit 1; }
+      PROVIDER="$2"
+      shift 2
+      ;;
+    --provider=*)
+      PROVIDER="${1#--provider=}"
+      shift
+      ;;
+    --continue)
+      CONTINUE_LATEST="true"
+      shift
+      ;;
+    -v|--verbose)
+      VERBOSE="true"
+      shift
+      ;;
+    *)
+      if [[ -z "$PROMPT" ]]; then
+        PROMPT="$1"
+      else
+        PROMPT+=" $1"
+      fi
+      shift
+      ;;
+  esac
 done
 
 # Always read piped stdin if available
@@ -65,16 +118,14 @@ if [[ -n "${PIPED}" ]]; then
   context+="${PIPED}"
 fi
 
-if [[ -n "${FILES}" ]]; then
-  for file in ${FILES}; do
-    [[ ! -f "${file}" ]] && { echo "error: file not found: ${file}" >&2; exit 1; }
-    file_content=$(cat "${file}")
-    if [[ -n "${context}" ]]; then
-      context+=$'\n\n---\n\n'
-    fi
-    context+="File: ${file}"$'\n\n'"${file_content}"
-  done
-fi
+for file in ${FILES[@]+"${FILES[@]}"}; do
+  [[ ! -f "${file}" ]] && { echo "error: file not found: ${file}" >&2; exit 1; }
+  file_content=$(cat "${file}")
+  if [[ -n "${context}" ]]; then
+    context+=$'\n\n---\n\n'
+  fi
+  context+="File: ${file}"$'\n\n'"${file_content}"
+done
 
 clip_content=""
 if [[ "${CLIPBOARD}" == "true" ]]; then
@@ -92,9 +143,9 @@ if [[ -z "${PROMPT}" ]]; then
   # Interactive: prompt the user
   if [[ -t 0 ]]; then
     placeholder="What would you like to ask?"
-    if [[ -n "${FILES}" && "${CLIPBOARD}" == "true" ]]; then
+    if [[ "${HAS_FILES}" == "true" && "${CLIPBOARD}" == "true" ]]; then
       placeholder="What would you like to ask about these?"
-    elif [[ -n "${FILES}" ]]; then
+    elif [[ "${HAS_FILES}" == "true" ]]; then
       placeholder="What would you like to ask about this file?"
     elif [[ "${CLIPBOARD}" == "true" ]]; then
       placeholder="What would you like to ask about this?"
